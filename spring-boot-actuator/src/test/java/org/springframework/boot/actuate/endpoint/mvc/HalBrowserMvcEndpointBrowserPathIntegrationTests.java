@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,19 +23,19 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.MinimalActuatorHypermediaApplication;
 import org.springframework.boot.actuate.endpoint.mvc.HalBrowserMvcEndpointBrowserPathIntegrationTests.SpringBootHypermediaApplication;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringApplicationConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,7 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Dave Syer
  * @author Andy Wilkinson
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @SpringApplicationConfiguration(SpringBootHypermediaApplication.class)
 @WebAppConfiguration
 @TestPropertySource(properties = "endpoints.actuator.path=/actuator")
@@ -68,7 +68,8 @@ public class HalBrowserMvcEndpointBrowserPathIntegrationTests {
 		MvcResult response = this.mockMvc
 				.perform(get("/actuator/").accept(MediaType.TEXT_HTML))
 				.andExpect(status().isOk()).andReturn();
-		assertEquals("/actuator/browser.html", response.getResponse().getForwardedUrl());
+		assertThat(response.getResponse().getForwardedUrl())
+				.isEqualTo("/actuator/browser.html");
 	}
 
 	@Test

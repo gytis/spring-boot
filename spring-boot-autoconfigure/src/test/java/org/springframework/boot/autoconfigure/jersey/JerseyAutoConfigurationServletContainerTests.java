@@ -28,23 +28,23 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.jersey.JerseyAutoConfigurationServletContainerTests.Application;
-import org.springframework.boot.autoconfigure.test.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.EmbeddedServletContainerAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.ServerPropertiesAutoConfiguration;
 import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.OutputCapture;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringApplicationTest;
+import org.springframework.boot.test.context.SpringApplicationTest.WebEnvironment;
+import org.springframework.boot.test.rule.OutputCapture;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests that verify the behavior when deployed to a Servlet container where Jersey may
@@ -52,24 +52,21 @@ import static org.junit.Assert.assertThat;
  *
  * @author Andy Wilkinson
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
+@DirtiesContext
 @SpringApplicationConfiguration(Application.class)
-@IntegrationTest("server.port=0")
-@WebAppConfiguration
+@SpringApplicationTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class JerseyAutoConfigurationServletContainerTests {
 
 	@ClassRule
 	public static OutputCapture output = new OutputCapture();
 
-	@Value("${local.server.port}")
-	private int port;
-
 	@Test
 	public void existingJerseyServletIsAmended() {
-		assertThat(output.toString(),
-				containsString("Configuring existing registration for Jersey servlet"));
-		assertThat(output.toString(), containsString(
-				"Servlet " + Application.class.getName() + " was not registered"));
+		assertThat(output.toString())
+				.contains("Configuring existing registration for Jersey servlet");
+		assertThat(output.toString()).contains(
+				"Servlet " + Application.class.getName() + " was not registered");
 	}
 
 	@ImportAutoConfiguration({ EmbeddedServletContainerAutoConfiguration.class,

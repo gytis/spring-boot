@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import org.crsh.vfs.spi.AbstractFSDriver;
 import org.crsh.vfs.spi.FSDriver;
 
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.actuate.autoconfigure.ShellProperties.CrshShellAuthenticationProperties;
@@ -111,37 +112,20 @@ import org.springframework.util.StringUtils;
  * {@code shell.command_path_patterns} in your application configuration.
  *
  * @author Christian Dupuis
+ * @author Matt Benson
  * @see ShellProperties
  */
 @Configuration
-@ConditionalOnClass({ PluginLifeCycle.class })
-@EnableConfigurationProperties({ ShellProperties.class })
+@ConditionalOnClass(PluginLifeCycle.class)
+@EnableConfigurationProperties(ShellProperties.class)
 @AutoConfigureAfter({ SecurityAutoConfiguration.class,
 		ManagementWebSecurityAutoConfiguration.class })
 public class CrshAutoConfiguration {
 
-	@Autowired
-	private ShellProperties properties;
+	private final ShellProperties properties;
 
-	@Bean
-	@ConditionalOnProperty(prefix = "shell", name = "auth", havingValue = "jaas")
-	@ConditionalOnMissingBean(CrshShellAuthenticationProperties.class)
-	public JaasAuthenticationProperties jaasAuthenticationProperties() {
-		return new JaasAuthenticationProperties();
-	}
-
-	@Bean
-	@ConditionalOnProperty(prefix = "shell", name = "auth", havingValue = "key")
-	@ConditionalOnMissingBean(CrshShellAuthenticationProperties.class)
-	public KeyAuthenticationProperties keyAuthenticationProperties() {
-		return new KeyAuthenticationProperties();
-	}
-
-	@Bean
-	@ConditionalOnProperty(prefix = "shell", name = "auth", havingValue = "simple", matchIfMissing = true)
-	@ConditionalOnMissingBean(CrshShellAuthenticationProperties.class)
-	public SimpleAuthenticationProperties simpleAuthenticationProperties() {
-		return new SimpleAuthenticationProperties();
+	public CrshAutoConfiguration(ShellProperties properties) {
+		this.properties = properties;
 	}
 
 	@Bean
@@ -152,17 +136,46 @@ public class CrshAutoConfiguration {
 		return bootstrapBean;
 	}
 
+	@Configuration
+	static class CrshAdditionalPropertiesConfiguration {
+
+		@Bean
+		@ConditionalOnProperty(prefix = "shell", name = "auth", havingValue = "jaas")
+		@ConditionalOnMissingBean(CrshShellAuthenticationProperties.class)
+		public JaasAuthenticationProperties jaasAuthenticationProperties() {
+			return new JaasAuthenticationProperties();
+		}
+
+		@Bean
+		@ConditionalOnProperty(prefix = "shell", name = "auth", havingValue = "key")
+		@ConditionalOnMissingBean(CrshShellAuthenticationProperties.class)
+		public KeyAuthenticationProperties keyAuthenticationProperties() {
+			return new KeyAuthenticationProperties();
+		}
+
+		@Bean
+		@ConditionalOnProperty(prefix = "shell", name = "auth", havingValue = "simple", matchIfMissing = true)
+		@ConditionalOnMissingBean(CrshShellAuthenticationProperties.class)
+		public SimpleAuthenticationProperties simpleAuthenticationProperties() {
+			return new SimpleAuthenticationProperties();
+		}
+
+	}
+
 	/**
 	 * Class to configure CRaSH to authenticate against Spring Security.
 	 */
 	@Configuration
 	@ConditionalOnProperty(prefix = "shell", name = "auth", havingValue = "spring", matchIfMissing = true)
 	@ConditionalOnBean(AuthenticationManager.class)
-	@AutoConfigureAfter(CrshAutoConfiguration.class)
-	public static class AuthenticationManagerAdapterAutoConfiguration {
+	public static class AuthenticationManagerAdapterConfiguration {
 
-		@Autowired(required = false)
-		private ManagementServerProperties management;
+		private final ManagementServerProperties management;
+
+		public AuthenticationManagerAdapterConfiguration(
+				ObjectProvider<ManagementServerProperties> managementProvider) {
+			this.management = managementProvider.getIfAvailable();
+		}
 
 		@Bean
 		public AuthenticationManagerAdapter shellAuthenticationManager() {
@@ -395,11 +408,11 @@ public class CrshAutoConfiguration {
 			pluginClasses.add(plugin.getClass());
 
 			for (Class<?> pluginClass : pluginClasses) {
-				if (isEnabled(pluginClass)) {
-					return true;
+				if (!isEnabled(pluginClass)) {
+					return false;
 				}
 			}
-			return false;
+			return true;
 		}
 
 		private boolean isEnabled(Class<?> pluginClass) {

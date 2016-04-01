@@ -25,7 +25,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.boot.ApplicationPid;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.bind.RelaxedPropertyResolver;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
@@ -47,8 +46,9 @@ import org.springframework.util.StringUtils;
 
 /**
  * An {@link ApplicationListener} that configures the {@link LoggingSystem}. If the
- * environment contains a {@code logging.config} property a then that will be used to
- * initialize the logging system, otherwise a default configuration is used.
+ * environment contains a {@code logging.config} property it will be used to bootstrap the
+ * logging system, otherwise a default configuration is used. Regardless, logging levels
+ * will be customized if the environment contains {@code logging.level.*} entries.
  * <p>
  * By default, log output is only written to the console. If a log file is required the
  * {@code logging.path} and {@code logging.file} properties can be used.
@@ -102,12 +102,37 @@ public class LoggingApplicationListener implements GenericApplicationListener {
 	/**
 	 * The name of the System property that contains the process ID.
 	 */
-	public static final String PID_KEY = "PID";
+	public static final String PID_KEY = LoggingSystemProperties.PID_KEY;
 
 	/**
 	 * The name of the System property that contains the exception conversion word.
 	 */
-	public static final String EXCEPTION_CONVERSION_WORD = "LOG_EXCEPTION_CONVERSION_WORD";
+	public static final String EXCEPTION_CONVERSION_WORD = LoggingSystemProperties.EXCEPTION_CONVERSION_WORD;
+
+	/**
+	 * The name of the System property that contains the log file.
+	 */
+	public static final String LOG_FILE = "LOG_FILE";
+
+	/**
+	 * The name of the System property that contains the log path.
+	 */
+	public static final String LOG_PATH = "LOG_PATH";
+
+	/**
+	 * The name of the System property that contains the console log pattern.
+	 */
+	public static final String CONSOLE_LOG_PATTERN = LoggingSystemProperties.CONSOLE_LOG_PATTERN;
+
+	/**
+	 * The name of the System property that contains the file log pattern.
+	 */
+	public static final String FILE_LOG_PATTERN = LoggingSystemProperties.FILE_LOG_PATTERN;
+
+	/**
+	 * The name of the System property that contains the log level pattern.
+	 */
+	public static final String LOG_LEVEL_PATTERN = LoggingSystemProperties.LOG_LEVEL_PATTERN;
 
 	/**
 	 * The name of the {@link LoggingSystem} bean.
@@ -222,41 +247,37 @@ public class LoggingApplicationListener implements GenericApplicationListener {
 	 */
 	protected void initialize(ConfigurableEnvironment environment,
 			ClassLoader classLoader) {
-		if (System.getProperty(PID_KEY) == null) {
-			System.setProperty(PID_KEY, new ApplicationPid().toString());
-		}
-		if (System.getProperty(EXCEPTION_CONVERSION_WORD) == null) {
-			System.setProperty(EXCEPTION_CONVERSION_WORD,
-					getExceptionConversionWord(environment));
+		new LoggingSystemProperties(environment).apply();
+		LogFile logFile = LogFile.get(environment);
+		if (logFile != null) {
+			logFile.applyToSystemProperties();
 		}
 		initializeEarlyLoggingLevel(environment);
-		initializeSystem(environment, this.loggingSystem);
+		initializeSystem(environment, this.loggingSystem, logFile);
 		initializeFinalLoggingLevels(environment, this.loggingSystem);
 		registerShutdownHookIfNecessary(environment, this.loggingSystem);
 	}
 
-	private String getExceptionConversionWord(ConfigurableEnvironment environment) {
-		RelaxedPropertyResolver resolver = new RelaxedPropertyResolver(environment,
-				"logging.");
-		return resolver.getProperty("exception-conversion-word", "%wEx");
-	}
-
 	private void initializeEarlyLoggingLevel(ConfigurableEnvironment environment) {
 		if (this.parseArgs && this.springBootLogging == null) {
-			if (environment.containsProperty("debug")) {
+			if (isSet(environment, "debug")) {
 				this.springBootLogging = LogLevel.DEBUG;
 			}
-			if (environment.containsProperty("trace")) {
+			if (isSet(environment, "trace")) {
 				this.springBootLogging = LogLevel.TRACE;
 			}
 		}
 	}
 
+	private boolean isSet(ConfigurableEnvironment environment, String property) {
+		String value = environment.getProperty(property);
+		return (value != null && !value.equals("false"));
+	}
+
 	private void initializeSystem(ConfigurableEnvironment environment,
-			LoggingSystem system) {
+			LoggingSystem system, LogFile logFile) {
 		LoggingInitializationContext initializationContext = new LoggingInitializationContext(
 				environment);
-		LogFile logFile = LogFile.get(environment);
 		String logConfig = environment.getProperty(CONFIG_PROPERTY);
 		if (ignoreLogConfig(logConfig)) {
 			system.initialize(initializationContext, null, logFile);

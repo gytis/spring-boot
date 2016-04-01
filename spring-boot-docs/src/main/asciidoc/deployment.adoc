@@ -401,6 +401,9 @@ NOTE: Fully executable jars work by embedding an extra script at the front of th
 Not all tools currently accept this format so you may not always be able to use this
 technique.
 
+NOTE: When a fully executable jar is run, it uses the jar's directory as the working
+directory.
+
 
 
 [[deployment-service]]
@@ -499,12 +502,13 @@ secured accordingly. Use `chmod` so that the file can only be read by the owner 
 
 [[deployment-systemd-service]]
 ==== Installation as a systemd service
-Systemd is the successor to `init.d` scripts, and now being used by many many modern Linux
-distributions. Although you can continue to use `init.d` script with `systemd`, it is also
-possible to launch Spring Boot applications using `systemd` '`service`' scripts.
+Systemd is the successor of the System V init system, and is now being used by many modern
+Linux distributions. Although you can continue to use `init.d` scripts with `systemd`, it
+is also possible to launch Spring Boot applications using `systemd` '`service`' scripts.
 
-For example, to run a Spring Boot application installed in `var/myapp` as user `myapp` you
-can add the following script in `/etc/systemd/system/myapp.service`:
+Assuming that you have a Spring Boot application installed in `/var/myapp`, to install a
+Spring Boot application as a `systemd` service create a script named `myapp.service` using
+the following example and place it in `/etc/systemd/system` directory:
 
 [indent=0]
 ----
@@ -521,7 +525,23 @@ can add the following script in `/etc/systemd/system/myapp.service`:
 	WantedBy=multi-user.target
 ----
 
-TIP: Remember to change the `Description` and `ExecStart` fields for your application.
+TIP: Remember to change the `Description`, `User` and `ExecStart` fields for your
+application.
+
+Note that unlike when running as an `init.d` service, user that runs the application, PID
+file and console log file behave differently under `systemd` and must be configured using
+appropriate fields in '`service`' script. Consult the
+http://www.freedesktop.org/software/systemd/man/systemd.service.html[service unit
+configuration man page] for more details.
+
+To flag the application to start automatically on system boot use the following command:
+
+[indent=0,subs="verbatim,quotes,attributes"]
+----
+	$ systemctl enable myapp.service
+----
+
+Refer to `man systemctl` for more details.
 
 
 
@@ -541,11 +561,18 @@ the default behavior in a script or on the command line:
  that the `stop\|start\|status\|restart` commands work, or to `run` if you just want to
  run the script in the foreground.
 
+|`USE_START_STOP_DAEMON`
+|If the `start-stop-daemon` command, when it's available, should be used to control the
+ process. Defaults to `true`.
+
 |`PID_FOLDER`
 |The root name of the pid folder (`/var/run` by default).
 
 |`LOG_FOLDER`
 |The name of the folder to put log files in (`/var/log` by default).
+
+|`CONF_FOLDER`
+|The name of the folder to read .conf files from (same folder as jar-file by default).
 
 |`LOG_FILENAME`
 |The name of the log file in the `LOG_FOLDER` (`<appname>.log` by default).
@@ -605,9 +632,15 @@ for Gradle and to `${project.name}` for Maven.
 |`initInfoChkconfig`
 |The `chkconfig` section of "`INIT INFO`". Defaults to `2345 99 01`.
 
+|`logFolder`
+|The default value for `LOG_FOLDER`. Only valid for an `init.d` service.
+
+|`pidFolder`
+|The default value for `PID_FOLDER`. Only valid for an `init.d` service.
+
 |`useStartStopDaemon`
-|If the start-stop command should be used to control the process when it's available.
- Defaults to `true`.
+|If the `start-stop-daemon` command, when it's available, should be used to control the
+ process. Defaults to `true`.
 |===
 
 
@@ -624,9 +657,10 @@ a `.conf` file,
 	LOG_FOLDER=/custom/log/folder
 ----
 
-The file should be situated next to the jar file and have the same name but suffixed with
+The file is expected next to the jar file and have the same name but suffixed with
 `.conf` rather than `.jar`. For example, a jar named `/var/myapp/myapp.jar` will use the
-configuration file named `/var/myapp/myapp.conf` if it exists.
+configuration file named `/var/myapp/myapp.conf` if it exists. You can also use the
+`CONF_FOLDER` property to customize the location of that file.
 
 To learn about securing this file appropriately, please refer to
 <<deployment-initd-service-securing,the guidelines for securing an init.d service>>.

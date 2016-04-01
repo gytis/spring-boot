@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,19 +41,19 @@ import org.springframework.boot.autoconfigure.web.DispatcherServletAutoConfigura
 import org.springframework.boot.autoconfigure.web.EmbeddedServletContainerAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.ServerPropertiesAutoConfiguration;
 import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.TestRestTemplate;
+import org.springframework.boot.test.context.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringApplicationTest;
+import org.springframework.boot.test.context.SpringApplicationTest.WebEnvironment;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Controller;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration Tests for {@link MustacheAutoConfiguration}, {@link MustacheViewResolver}
@@ -61,10 +61,10 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Dave Syer
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
+@DirtiesContext
 @SpringApplicationConfiguration(Application.class)
-@IntegrationTest("server.port:0")
-@WebAppConfiguration
+@SpringApplicationTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class MustacheWebIntegrationTests {
 
 	@Autowired
@@ -82,21 +82,22 @@ public class MustacheWebIntegrationTests {
 		Template tmpl = Mustache.compiler().compile(source);
 		Map<String, String> context = new HashMap<String, String>();
 		context.put("arg", "world");
-		assertEquals("Hello world!", tmpl.execute(context)); // returns "Hello world!"
+		assertThat(tmpl.execute(context)).isEqualTo("Hello world!"); // returns "Hello
+																		// world!"
 	}
 
 	@Test
 	public void testHomePage() throws Exception {
 		String body = new TestRestTemplate().getForObject("http://localhost:" + this.port,
 				String.class);
-		assertTrue(body.contains("Hello World"));
+		assertThat(body.contains("Hello World")).isTrue();
 	}
 
 	@Test
 	public void testPartialPage() throws Exception {
 		String body = new TestRestTemplate()
 				.getForObject("http://localhost:" + this.port + "/partial", String.class);
-		assertTrue(body.contains("Hello World"));
+		assertThat(body.contains("Hello World")).isTrue();
 	}
 
 	@Target(ElementType.TYPE)

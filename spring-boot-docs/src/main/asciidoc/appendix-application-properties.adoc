@@ -63,6 +63,8 @@ content into your application; rather pick only the properties that you need.
 
 	# SPRING CACHE ({sc-spring-boot-autoconfigure}/cache/CacheProperties.{sc-ext}[CacheProperties])
 	spring.cache.cache-names= # Comma-separated list of cache names to create if supported by the underlying cache manager.
+	spring.cache.caffeine.spec= # The spec to use to create caches. Check CaffeineSpec for more details on the spec format.
+	spring.cache.couchbase.expiration=0 # Entry expiration in milliseconds. By default the entries never expire.
 	spring.cache.ehcache.config= # The location of the configuration file to use to initialize EhCache.
 	spring.cache.guava.spec= # The spec to use to create caches. Check CacheBuilderSpec for more details on the spec format.
 	spring.cache.hazelcast.config= # The location of the configuration file to use to initialize Hazelcast.
@@ -77,6 +79,10 @@ content into your application; rather pick only the properties that you need.
 
 	# HAZELCAST ({sc-spring-boot-autoconfigure}/hazelcast/HazelcastProperties.{sc-ext}[HazelcastProperties])
 	spring.hazelcast.config= # The location of the configuration file to use to initialize Hazelcast.
+
+	# PROJECT INFORMATION ({sc-spring-boot-autoconfigure}/info/ProjectInfoProperties.{sc-ext}[ProjectInfoProperties])
+	spring.info.build.location=classpath:META-INF/boot/build.properties # Location of the generated build.properties file.
+	spring.info.git.location=classpath:git.properties # Location of the generated git.properties file.
 
 	# JMX
 	spring.jmx.default-domain= # JMX domain name.
@@ -103,6 +109,7 @@ content into your application; rather pick only the properties that you need.
 	spring.mandatory-file-encoding= # Expected character encoding the application must use.
 
 	# INTERNATIONALIZATION ({sc-spring-boot-autoconfigure}/MessageSourceAutoConfiguration.{sc-ext}[MessageSourceAutoConfiguration])
+    spring.messages.always-use-message-format=false # Set whether to always apply the MessageFormat rules, parsing even messages without arguments.
 	spring.messages.basename=messages # Comma-separated list of basenames, each following the ResourceBundle convention.
 	spring.messages.cache-seconds=-1 # Loaded resource bundle files cache expiration, in seconds. When set to -1, bundles are cached forever.
 	spring.messages.encoding=UTF-8 # Message bundles encoding.
@@ -120,6 +127,7 @@ content into your application; rather pick only the properties that you need.
 	spring.profiles.include= # Unconditionally activate the specified comma separated profiles.
 
 	# SENDGRID ({sc-spring-boot-autoconfigure}/sendgrid/SendGridAutoConfiguration.{sc-ext}[SendGridAutoConfiguration])
+	spring.sendgrid.api-key= # SendGrid api key (alternative to username/password)
 	spring.sendgrid.username= # SendGrid account username
 	spring.sendgrid.password= # SendGrid account password
 	spring.sendgrid.proxy.host= # SendGrid proxy host
@@ -276,6 +284,7 @@ content into your application; rather pick only the properties that you need.
 	spring.jersey.application-path= # Path that serves as the base URI for the application. Overrides the value of "@ApplicationPath" if specified.
 	spring.jersey.filter.order=0 # Jersey filter chain order.
 	spring.jersey.init.*= # Init parameters to pass to Jersey via the servlet or filter.
+	spring.jersey.servlet.load-on-startup=-1 # Load on startup priority of the Jersey servlet.
 	spring.jersey.type=servlet # Jersey integration type. Can be either "servlet" or "filter".
 
 	# SPRING MOBILE DEVICE VIEWS ({sc-spring-boot-autoconfigure}/mobile/DeviceDelegatingViewResolverAutoConfiguration.{sc-ext}[DeviceDelegatingViewResolverAutoConfiguration])
@@ -321,6 +330,7 @@ content into your application; rather pick only the properties that you need.
 	spring.resources.cache-period= # Cache period for the resources served by the resource handler, in seconds.
 	spring.resources.chain.cache=true # Enable caching in the Resource chain.
 	spring.resources.chain.enabled= # Enable the Spring Resource Handling chain. Disabled by default unless at least one strategy has been enabled.
+	spring.resources.chain.gzipped=false # Enable resolution of already gzipped resources.
 	spring.resources.chain.html-application-cache=false # Enable HTML5 application cache manifest rewriting.
 	spring.resources.chain.strategy.content.enabled=false # Enable the content Version Strategy.
 	spring.resources.chain.strategy.content.paths=/** # Comma-separated list of patterns to apply to the Version Strategy.
@@ -466,6 +476,21 @@ content into your application; rather pick only the properties that you need.
 	liquibase.url= # JDBC url of the database to migrate. If not set, the primary configured data source is used.
 	liquibase.user= # Login user of the database to migrate.
 
+	# COUCHBASE ({sc-spring-boot-autoconfigure}/couchbase/CouchbaseProperties.{sc-ext}[CouchbaseProperties])
+	spring.couchbase.bootstrap-hosts= # Couchbase nodes (host or IP address) to bootstrap from.
+	spring.couchbase.bucket.name=default # Name of the bucket to connect to.
+	spring.couchbase.bucket.password=  # Password of the bucket.
+	spring.couchbase.env.endpoints.key-value=1 # Number of sockets per node against the Key/value service.
+	spring.couchbase.env.endpoints.query=1 # Number of sockets per node against the Query (N1QL) service.
+	spring.couchbase.env.endpoints.view=1 # Number of sockets per node against the view service.
+	spring.couchbase.env.ssl.enabled= # Enable SSL support. Enabled automatically if a "keyStore" is provided unless specified otherwise.
+	spring.couchbase.env.ssl.key-store= # Path to the JVM key store that holds the certificates.
+	spring.couchbase.env.ssl.key-store-password= # Password used to access the key store.
+	spring.couchbase.env.timeouts.connect=5000 # Bucket connections timeout in milliseconds.
+	spring.couchbase.env.timeouts.key-value=2500 # Blocking operations performed on a specific key timeout in milliseconds.
+	spring.couchbase.env.timeouts.query=7500 # N1QL query operations timeout in milliseconds.
+	spring.couchbase.env.timeouts.view=7500 # Regular and geospatial view operations timeout in milliseconds.
+
 	# DAO ({sc-spring-boot-autoconfigure}/dao/PersistenceExceptionTranslationAutoConfiguration.{sc-ext}[PersistenceExceptionTranslationAutoConfiguration])
 	spring.dao.exceptiontranslation.enabled=true # Enable the PersistenceExceptionTranslationPostProcessor.
 
@@ -487,6 +512,11 @@ content into your application; rather pick only the properties that you need.
 	spring.data.cassandra.ssl=false # Enable SSL support.
 	spring.data.cassandra.username= # Login user of the server.
 
+	# DATA COUCHBASE ({sc-spring-boot-autoconfigure}/data/couchbase/CouchbaseDataProperties.{sc-ext}[CouchbaseDataProperties])
+	spring.data.couchbase.auto-index=false # Automatically create views and indexes.
+    spring.data.couchbase.consistency=read-your-own-writes # Consistency to apply by default on generated queries.
+    spring.data.couchbase.repositories.enabled=true # Enable Couchbase repositories.
+
 	# ELASTICSEARCH ({sc-spring-boot-autoconfigure}/elasticsearch/ElasticsearchProperties.{sc-ext}[ElasticsearchProperties])
 	spring.data.elasticsearch.cluster-name=elasticsearch # Elasticsearch cluster name.
 	spring.data.elasticsearch.cluster-nodes= # Comma-separated list of cluster node addresses. If not specified, starts a client node.
@@ -504,6 +534,18 @@ content into your application; rather pick only the properties that you need.
 	spring.data.mongodb.repositories.enabled=true # Enable Mongo repositories.
 	spring.data.mongodb.uri=mongodb://localhost/test # Mongo database URI. When set, host and port are ignored.
 	spring.data.mongodb.username= # Login user of the mongo server.
+
+	# DATA REDIS
+	spring.data.redis.repositories.enabled=true # Enable Redis repositories.
+
+	# NEO4J ({sc-spring-boot-autoconfigure}/neo4j/Neo4jProperties.{sc-ext}[Neo4jProperties])
+    spring.data.neo4j.compiler= # Compiler to use.
+    spring.data.neo4j.embedded.enabled=true # Enable embedded mode if the embedded driver is available.
+    spring.data.neo4j.password= # Login password of the server.
+    spring.data.neo4j.repositories.enabled=true # Enable Neo4j repositories.
+    spring.data.neo4j.session.scope=singleton # Scope (lifetime) of the session.
+    spring.data.neo4j.uri= # URI used by the driver. Auto-detected by default.
+    spring.data.neo4j.username= # Login user of the server.
 
 	# DATA REST ({sc-spring-boot-autoconfigure}/data/rest/RepositoryRestProperties.{sc-ext}[RepositoryRestProperties])
 	spring.data.rest.base-path= # Base path to be used by Spring Data REST to expose repository resources.
@@ -524,33 +566,29 @@ content into your application; rather pick only the properties that you need.
 	# DATASOURCE ({sc-spring-boot-autoconfigure}/jdbc/DataSourceAutoConfiguration.{sc-ext}[DataSourceAutoConfiguration] & {sc-spring-boot-autoconfigure}/jdbc/DataSourceProperties.{sc-ext}[DataSourceProperties])
 	spring.datasource.continue-on-error=false # Do not stop if an error occurs while initializing the database.
 	spring.datasource.data= # Data (DML) script resource reference.
+	spring.datasource.dbcp.*= # Commons DBCP specific settings
+	spring.datasource.dbcp2.*= # Commons DBCP2 specific settings
 	spring.datasource.driver-class-name= # Fully qualified name of the JDBC driver. Auto-detected based on the URL by default.
+	spring.datasource.hikari.*= # Hikari specific settings
 	spring.datasource.initialize=true # Populate the database using 'data.sql'.
 	spring.datasource.jmx-enabled=false # Enable JMX support (if provided by the underlying pool).
 	spring.datasource.jndi-name= # JNDI location of the datasource. Class, url, username & password are ignored when set.
-	spring.datasource.max-active= # For instance 100
-	spring.datasource.max-idle= # For instance 8
-	spring.datasource.max-wait=
-	spring.datasource.min-evictable-idle-time-millis=
-	spring.datasource.min-idle=8
 	spring.datasource.name=testdb # Name of the datasource.
 	spring.datasource.password= # Login password of the database.
 	spring.datasource.platform=all # Platform to use in the schema resource (schema-${platform}.sql).
 	spring.datasource.schema= # Schema (DDL) script resource reference.
 	spring.datasource.separator=; # Statement separator in SQL initialization scripts.
 	spring.datasource.sql-script-encoding= # SQL scripts encoding.
-	spring.datasource.test-on-borrow= # For instance `false`
-	spring.datasource.test-on-return= # For instance `false`
-	spring.datasource.test-while-idle= #
-	spring.datasource.time-between-eviction-runs-millis= 1
+	spring.datasource.tomcat.*= # Tomcat datasource specific settings
 	spring.datasource.type= # Fully qualified name of the connection pool implementation to use. By default, it is auto-detected from the classpath.
 	spring.datasource.url= # JDBC url of the database.
 	spring.datasource.username=
-	spring.datasource.validation-query=
 
 	# H2 Web Console ({sc-spring-boot-autoconfigure}/h2/H2ConsoleProperties.{sc-ext}[H2ConsoleProperties])
 	spring.h2.console.enabled=false # Enable the console.
 	spring.h2.console.path=/h2-console # Path at which the console will be available.
+	spring.h2.console.settings.trace=false # Enable trace output.
+	spring.h2.console.settings.web-allow-others=false # Enable remote access.
 
 	# JOOQ ({sc-spring-boot-autoconfigure}/jooq/JooqAutoConfiguration.{sc-ext}[JooqAutoConfiguration])
 	spring.jooq.sql-dialect= # SQLDialect JOOQ used when communicating with the configured datasource. For instance `POSTGRES`
@@ -567,8 +605,9 @@ content into your application; rather pick only the properties that you need.
 	spring.jpa.show-sql=false # Enable logging of SQL statements.
 
 	# JTA ({sc-spring-boot-autoconfigure}/transaction/jta/JtaAutoConfiguration.{sc-ext}[JtaAutoConfiguration])
-	spring.jta.*= # technology specific configuration
-	spring.jta.log-dir= # Transaction logs directory.
+	spring.jta.enabled=true # Enable JTA support.
+    spring.jta.log-dir= # Transaction logs directory.
+    spring.jta.transaction-manager-id= # Transaction manager unique identifier.
 
 	# ATOMIKOS
 	spring.jta.atomikos.connectionfactory.borrow-connection-timeout=30 # Timeout, in seconds, for borrowing connections from the pool.
@@ -592,6 +631,23 @@ content into your application; rather pick only the properties that you need.
 	spring.jta.atomikos.datasource.reap-timeout=0 # The reap timeout, in seconds, for borrowed connections. 0 denotes no limit.
 	spring.jta.atomikos.datasource.test-query= # SQL query or statement used to validate a connection before returning it.
 	spring.jta.atomikos.datasource.unique-resource-name=dataSource # The unique name used to identify the resource during recovery.
+	spring.jta.atomikos.properties.checkpoint-interval=500 # Interval between checkpoints.
+	spring.jta.atomikos.properties.console-file-count=1 # Number of debug logs files that can be created.
+	spring.jta.atomikos.properties.console-file-limit=-1 # How many bytes can be stored at most in debug logs files.
+	spring.jta.atomikos.properties.console-file-name=tm.out # Debug logs file name.
+	spring.jta.atomikos.properties.console-log-level= # Console log level.
+	spring.jta.atomikos.properties.default-jta-timeout=10000 # Default timeout for JTA transactions.
+	spring.jta.atomikos.properties.enable-logging=true # Enable disk logging.
+	spring.jta.atomikos.properties.force-shutdown-on-vm-exit=false # Specify if a VM shutdown should trigger forced shutdown of the transaction core.
+	spring.jta.atomikos.properties.log-base-dir= # Directory in which the log files should be stored.
+	spring.jta.atomikos.properties.log-base-name=tmlog # Transactions log file base name.
+	spring.jta.atomikos.properties.max-actives=50 # Maximum number of active transactions.
+	spring.jta.atomikos.properties.max-timeout=300000 # Maximum timeout (in milliseconds) that can be allowed for transactions.
+	spring.jta.atomikos.properties.output-dir= # Directory in which to store the debug log files.
+	spring.jta.atomikos.properties.serial-jta-transactions=true # Specify if sub-transactions should be joined when possible.
+	spring.jta.atomikos.properties.service= # Transaction manager implementation that should be started.
+	spring.jta.atomikos.properties.threaded-two-phase-commit=true # Use different (and concurrent) threads for two-phase commit on the participating resources.
+	spring.jta.atomikos.properties.transaction-manager-unique-name= # Transaction manager's unique name.
 
 	# BITRONIX
 	spring.jta.bitronix.connectionfactory.acquire-increment=1 # Number of connections to create when growing the pool.
@@ -635,12 +691,49 @@ content into your application; rather pick only the properties that you need.
 	spring.jta.bitronix.datasource.two-pc-ordering-position=1 # The position that this resource should take during two-phase commit (always first is Integer.MIN_VALUE, always last is Integer.MAX_VALUE).
 	spring.jta.bitronix.datasource.unique-name=dataSource # The unique name used to identify the resource during recovery.
 	spring.jta.bitronix.datasource.use-tm-join=true Whether or not TMJOIN should be used when starting XAResources.
+	spring.jta.bitronix.properties.allow-multiple-lrc=false # Allow multiple LRC resources to be enlisted into the same transaction.
+    spring.jta.bitronix.properties.asynchronous2-pc=false # Enable asynchronously execution of two phase commit.
+    spring.jta.bitronix.properties.background-recovery-interval-seconds=60 # Interval in seconds at which to run the recovery process in the background.
+    spring.jta.bitronix.properties.current-node-only-recovery=true # Recover only the current node.
+    spring.jta.bitronix.properties.debug-zero-resource-transaction=false # Log the creation and commit call stacks of transactions executed without a single enlisted resource.
+    spring.jta.bitronix.properties.default-transaction-timeout=60 # Default transaction timeout in seconds.
+    spring.jta.bitronix.properties.disable-jmx=false # Enable JMX support.
+    spring.jta.bitronix.properties.exception-analyzer= # Set the fully qualified name of the exception analyzer implementation to use.
+    spring.jta.bitronix.properties.filter-log-status=false # Enable filtering of logs so that only mandatory logs are written.
+    spring.jta.bitronix.properties.force-batching-enabled=true #  Set if disk forces are batched.
+    spring.jta.bitronix.properties.forced-write-enabled=true # Set if logs are forced to disk.
+    spring.jta.bitronix.properties.graceful-shutdown-interval=60 # Maximum amount of seconds the TM will wait for transactions to get done before aborting them at shutdown time.
+    spring.jta.bitronix.properties.jndi-transaction-synchronization-registry-name= # JNDI name of the TransactionSynchronizationRegistry.
+    spring.jta.bitronix.properties.jndi-user-transaction-name= # JNDI name of the UserTransaction.
+    spring.jta.bitronix.properties.journal=disk # Name of the journal. Can be 'disk', 'null' or a class name.
+    spring.jta.bitronix.properties.log-part1-filename=btm1.tlog # Name of the first fragment of the journal.
+    spring.jta.bitronix.properties.log-part2-filename=btm2.tlog # Name of the second fragment of the journal.
+    spring.jta.bitronix.properties.max-log-size-in-mb=2 # Maximum size in megabytes of the journal fragments.
+    spring.jta.bitronix.properties.resource-configuration-filename= # ResourceLoader configuration file name.
+    spring.jta.bitronix.properties.server-id= # ASCII ID that must uniquely identify this TM instance. Default to the machine's IP address.
+    spring.jta.bitronix.properties.skip-corrupted-logs=false # Skip corrupted transactions log entries.
+    spring.jta.bitronix.properties.warn-about-zero-resource-transaction=true # Log a warning for transactions executed without a single enlisted resource.
+
+    # NARAYANA
+    spring.jta.narayana.one-phase-commit=true # Enable or disable one phase commit optimisation
+    spring.jta.narayana.default-timeout=60 # Set default transaction timeout in seconds
+    spring.jta.narayana.periodic-recovery-period=120 # Set interval in which periodic recovery scans are performed in seconds
+    spring.jta.narayana.recovery-backoff-period=10 # Set back off period between first and second phases of the recovery scan in seconds
+    spring.jta.narayana.xa-resource-orphan-filters=com.arjuna.ats.internal.jta.recovery.arjunacore.JTATransactionLogXAResourceOrphanFilter,com.arjuna.ats.internal.jta.recovery.arjunacore.JTANodeNameXAResourceOrphanFilter # List of XAResourceOrphanFilter implementations
+    spring.jta.narayana.recovery-modules=com.arjuna.ats.internal.arjuna.recovery.AtomicActionRecoveryModule,com.arjuna.ats.internal.jta.recovery.arjunacore.XARecoveryModule # List of RecoveryModule implementations
+    spring.jta.narayana.expiry-scanners=com.arjuna.ats.internal.arjuna.recovery.ExpiredTransactionStatusManagerScanner # List of ExpiryScanner implementations
+    spring.jta.narayana.recovery-db-user= # Database username to be used by recovery manager
+    spring.jta.narayana.recovery-db-pass= # Database password to be used by recovery manager
+    spring.jta.narayana.recovery-jms-user= # JMS username to be used by recovery manager
+    spring.jta.narayana.recovery-jms-pass= # JMS password to be used by recovery manager
 
 	# EMBEDDED MONGODB ({sc-spring-boot-autoconfigure}/mongo/embedded/EmbeddedMongoProperties.{sc-ext}[EmbeddedMongoProperties])
 	spring.mongodb.embedded.features=SYNC_DELAY # Comma-separated list of features to enable.
 	spring.mongodb.embedded.version=2.6.10 # Version of Mongo to use.
 
 	# REDIS ({sc-spring-boot-autoconfigure}/redis/RedisProperties.{sc-ext}[RedisProperties])
+	spring.redis.cluster.max-redirects= # Maximum number of redirects to follow when executing commands across the cluster.
+	spring.redis.cluster.nodes= # Comma-separated list of "host:port" pairs to bootstrap from.
 	spring.redis.database=0 # Database index used by the connection factory.
 	spring.redis.host=localhost # Redis server host.
 	spring.redis.password= # Login password of the redis server.
@@ -662,8 +755,12 @@ content into your application; rather pick only the properties that you need.
 	spring.activemq.broker-url= # URL of the ActiveMQ broker. Auto-generated by default. For instance `tcp://localhost:61616`
 	spring.activemq.in-memory=true # Specify if the default broker URL should be in memory. Ignored if an explicit broker has been specified.
 	spring.activemq.password= # Login password of the broker.
-	spring.activemq.pooled=false # Specify if a PooledConnectionFactory should be created instead of a regular ConnectionFactory.
 	spring.activemq.user= # Login user of the broker.
+	spring.activemq.pool.configuration.*= # See PooledConnectionFactory
+	spring.activemq.pool.enabled=false # Whether a PooledConnectionFactory should be created instead of a regular ConnectionFactory.
+    spring.activemq.pool.expiry-timeout=0 # Connection expiration timeout in milliseconds.
+    spring.activemq.pool.idle-timeout=30000 # Connection idle timeout in milliseconds.
+    spring.activemq.pool.max-connections=1 # Maximum number of pooled connections.
 
 	# ARTEMIS ({sc-spring-boot-autoconfigure}/jms/artemis/ArtemisProperties.{sc-ext}[ArtemisProperties])
 	spring.artemis.embedded.cluster-password= # Cluster password. Randomly generated on startup by default.
@@ -705,14 +802,25 @@ content into your application; rather pick only the properties that you need.
 	spring.jms.pub-sub-domain=false # Specify if the default destination type is topic.
 
 	# RABBIT ({sc-spring-boot-autoconfigure}/amqp/RabbitProperties.{sc-ext}[RabbitProperties])
-	spring.rabbitmq.addresses= # Comma-separated list of addresses to which the client should connect to.
+	spring.rabbitmq.addresses= # Comma-separated list of addresses to which the client should connect.
+	spring.rabbitmq.cache.channel.checkout-timeout= # Number of milliseconds to wait to obtain a channel if the cache size has been reached.
+	spring.rabbitmq.cache.channel.size= # Number of channels to retain in the cache.
+	spring.rabbitmq.cache.connection.mode= # Connection factory cache mode.
+	spring.rabbitmq.cache.connection.size= # Number of connections to cache.
 	spring.rabbitmq.dynamic=true # Create an AmqpAdmin bean.
 	spring.rabbitmq.host=localhost # RabbitMQ host.
 	spring.rabbitmq.listener.acknowledge-mode= # Acknowledge mode of container.
 	spring.rabbitmq.listener.auto-startup=true # Start the container automatically on startup.
 	spring.rabbitmq.listener.concurrency= # Minimum number of consumers.
+	spring.rabbitmq.listener.default-requeue-rejected= # Whether or not to requeue delivery failures; default `true`.
 	spring.rabbitmq.listener.max-concurrency= # Maximum number of consumers.
 	spring.rabbitmq.listener.prefetch= # Number of messages to be handled in a single request. It should be greater than or equal to the transaction size (if used).
+	spring.rabbitmq.listener.retry.enabled= # Whether or not publishing retries are enabled.
+	spring.rabbitmq.listener.retry.initial-interval=1000 # Interval between the first and second attempt to deliver a message.
+	spring.rabbitmq.listener.retry.max-attempts=3 # Maximum number of attempts to deliver a message.
+	spring.rabbitmq.listener.retry.max-interval=10000 # Maximum number of attempts to deliver a message.
+	spring.rabbitmq.listener.retry.multiplier=1.0 # A multiplier to apply to the previous delivery retry interval.
+	spring.rabbitmq.listener.retry.stateless=true # Whether or not retry is stateless or stateful.
 	spring.rabbitmq.listener.transaction-size= # Number of messages to be processed in a transaction. For best results it should be less than or equal to the prefetch count.
 	spring.rabbitmq.password= # Login to authenticate against the broker.
 	spring.rabbitmq.port=5672 # RabbitMQ port.
@@ -722,6 +830,13 @@ content into your application; rather pick only the properties that you need.
 	spring.rabbitmq.ssl.key-store-password= # Password used to access the key store.
 	spring.rabbitmq.ssl.trust-store= # Trust store that holds SSL certificates.
 	spring.rabbitmq.ssl.trust-store-password= # Password used to access the trust store.
+	spring.rabbitmq.template.receive-timeout=0 # Timeout for `receive()` methods.
+	spring.rabbitmq.template.reply-timeout=5000 # Timeout for `sendAndReceive()` methods.
+	spring.rabbitmq.template.retry.enabled= # Set to true to enable retries in the `RabbitTemplate`.
+	spring.rabbitmq.template.retry.initial-interval=1000 # Interval between the first and second attempt to publish a message.
+	spring.rabbitmq.template.retry.max-attempts=3 # Maximum number of attempts to publish a message.
+	spring.rabbitmq.template.retry.max-interval=10000 # Maximum number of attempts to publish a message.
+	spring.rabbitmq.template.retry.multiplier=1.0 # A multiplier to apply to the previous publishing retry interval.
 	spring.rabbitmq.username= # Login user to authenticate to the broker.
 	spring.rabbitmq.virtual-host= # Virtual host to use when connecting to the broker.
 
@@ -738,13 +853,16 @@ content into your application; rather pick only the properties that you need.
 	endpoints.actuator.sensitive=false # Enable security on the endpoint.
 	endpoints.autoconfig.enabled= # Enable the endpoint.
 	endpoints.autoconfig.id= # Endpoint identifier.
+	endpoints.autoconfig.path= # Endpoint path.
 	endpoints.autoconfig.sensitive= # Mark if the endpoint exposes sensitive information.
 	endpoints.beans.enabled= # Enable the endpoint.
 	endpoints.beans.id= # Endpoint identifier.
+	endpoints.beans.path= # Endpoint path.
 	endpoints.beans.sensitive= # Mark if the endpoint exposes sensitive information.
 	endpoints.configprops.enabled= # Enable the endpoint.
 	endpoints.configprops.id= # Endpoint identifier.
-	endpoints.configprops.keys-to-sanitize=password,secret,key,.*credentials.*,vcap_services # Keys that should be sanitized. Keys can be simple strings that the property ends with or regex expressions.
+	endpoints.configprops.keys-to-sanitize=password,secret,key,token,.*credentials.*,vcap_services # Keys that should be sanitized. Keys can be simple strings that the property ends with or regex expressions.
+	endpoints.configprops.path= # Endpoint path.
 	endpoints.configprops.sensitive= # Mark if the endpoint exposes sensitive information.
 	endpoints.docs.curies.enabled=false # Enable the curie generation.
 	endpoints.docs.enabled=true # Enable actuator docs endpoint.
@@ -752,10 +870,12 @@ content into your application; rather pick only the properties that you need.
 	endpoints.docs.sensitive=false #
 	endpoints.dump.enabled= # Enable the endpoint.
 	endpoints.dump.id= # Endpoint identifier.
+	endpoints.dump.path= # Endpoint path.
 	endpoints.dump.sensitive= # Mark if the endpoint exposes sensitive information.
 	endpoints.env.enabled= # Enable the endpoint.
 	endpoints.env.id= # Endpoint identifier.
-	endpoints.env.keys-to-sanitize=password,secret,key,.*credentials.*,vcap_services # Keys that should be sanitized. Keys can be simple strings that the property ends with or regex expressions.
+	endpoints.env.keys-to-sanitize=password,secret,key,token,.*credentials.*,vcap_services # Keys that should be sanitized. Keys can be simple strings that the property ends with or regex expressions.
+	endpoints.env.path= # Endpoint path.
 	endpoints.env.sensitive= # Mark if the endpoint exposes sensitive information.
 	endpoints.flyway.enabled= # Enable the endpoint.
 	endpoints.flyway.id= # Endpoint identifier.
@@ -763,10 +883,12 @@ content into your application; rather pick only the properties that you need.
 	endpoints.health.enabled= # Enable the endpoint.
 	endpoints.health.id= # Endpoint identifier.
 	endpoints.health.mapping.*= # Mapping of health statuses to HttpStatus codes. By default, registered health statuses map to sensible defaults (i.e. UP maps to 200).
+	endpoints.health.path= # Endpoint path.
 	endpoints.health.sensitive= # Mark if the endpoint exposes sensitive information.
 	endpoints.health.time-to-live=1000 # Time to live for cached result, in milliseconds.
 	endpoints.info.enabled= # Enable the endpoint.
 	endpoints.info.id= # Endpoint identifier.
+	endpoints.info.path= # Endpoint path.
 	endpoints.info.sensitive= # Mark if the endpoint exposes sensitive information.
 	endpoints.jolokia.enabled=true # Enable Jolokia endpoint.
 	endpoints.jolokia.path=/jolokia # Endpoint URL path.
@@ -779,16 +901,20 @@ content into your application; rather pick only the properties that you need.
 	endpoints.logfile.sensitive=true # Enable security on the endpoint.
 	endpoints.mappings.enabled= # Enable the endpoint.
 	endpoints.mappings.id= # Endpoint identifier.
+	endpoints.mappings.path= # Endpoint path.
 	endpoints.mappings.sensitive= # Mark if the endpoint exposes sensitive information.
 	endpoints.metrics.enabled= # Enable the endpoint.
 	endpoints.metrics.filter.enabled=true # Enable the metrics servlet filter.
 	endpoints.metrics.id= # Endpoint identifier.
+	endpoints.metrics.path= # Endpoint path.
 	endpoints.metrics.sensitive= # Mark if the endpoint exposes sensitive information.
 	endpoints.shutdown.enabled= # Enable the endpoint.
 	endpoints.shutdown.id= # Endpoint identifier.
+	endpoints.shutdown.path= # Endpoint path.
 	endpoints.shutdown.sensitive= # Mark if the endpoint exposes sensitive information.
 	endpoints.trace.enabled= # Enable the endpoint.
 	endpoints.trace.id= # Endpoint identifier.
+	endpoints.trace.path= # Endpoint path.
 	endpoints.trace.sensitive= # Mark if the endpoint exposes sensitive information.
 
 	# ENDPOINTS CORS CONFIGURATION ({sc-spring-boot-actuator}/autoconfigure/EndpointCorsProperties.{sc-ext}[EndpointCorsProperties])
@@ -834,6 +960,14 @@ content into your application; rather pick only the properties that you need.
 	management.health.solr.enabled=true # Enable Solr health check.
 	management.health.status.order=DOWN, OUT_OF_SERVICE, UNKNOWN, UP # Comma-separated list of health statuses in order of severity.
 
+	# INFO CONTRIBUTORS
+	management.info.build.enabled=true # Enable build info.
+	management.info.build.mode=simple # Mode to use to expose build information.
+	management.info.defaults.enabled=true # Enable default health indicators.
+	management.info.env.enabled=true # Enable environment info.
+	management.info.git.enabled=true # Enable git info.
+	management.info.git.mode=simple # Mode to use to expose git information.
+
 	# TRACING (({sc-spring-boot-actuator}/trace/TraceProperties.{sc-ext}[TraceProperties])
 	management.trace.include=request-headers,response-headers,errors # Items to be included in the trace.
 
@@ -856,9 +990,6 @@ content into your application; rather pick only the properties that you need.
 	shell.ssh.port=2000 # SSH port.
 	shell.telnet.enabled=false # Enable CRaSH telnet support. Enabled by default if the TelnetPlugin is  available.
 	shell.telnet.port=5000 # Telnet port.
-
-	# GIT INFO
-	spring.git.properties= # Resource reference to a generated git info properties file.
 
 	# METRICS EXPORT ({sc-spring-boot-actuator}/metrics/export/MetricExportProperties.{sc-ext}[MetricExportProperties])
 	spring.metrics.export.aggregate.key-pattern= # Pattern that tells the aggregator what to do with the keys from the source repository.

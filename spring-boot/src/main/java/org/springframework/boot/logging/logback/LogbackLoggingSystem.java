@@ -122,15 +122,13 @@ public class LogbackLoggingSystem extends Slf4JLoggingSystem {
 						"${logging.pattern.level:${LOG_LEVEL_PATTERN:%5p}}"));
 		new DefaultLogbackConfiguration(initializationContext, logFile)
 				.apply(configurator);
+		context.setPackagingDataEnabled(true);
 	}
 
 	@Override
 	protected void loadConfiguration(LoggingInitializationContext initializationContext,
 			String location, LogFile logFile) {
-		Assert.notNull(location, "Location must not be null");
-		if (logFile != null) {
-			logFile.applyToSystemProperties();
-		}
+		super.loadConfiguration(initializationContext, location, logFile);
 		LoggerContext loggerContext = getLoggerContext();
 		stopAndReset(loggerContext);
 		try {
@@ -145,13 +143,13 @@ public class LogbackLoggingSystem extends Slf4JLoggingSystem {
 		StringBuilder errors = new StringBuilder();
 		for (Status status : statuses) {
 			if (status.getLevel() == Status.ERROR) {
-				errors.append(errors.length() > 0 ? "\n" : "");
+				errors.append(errors.length() > 0 ? String.format("%n") : "");
 				errors.append(status.toString());
 			}
 		}
 		if (errors.length() > 0) {
 			throw new IllegalStateException(
-					"Logback configuration error " + "detected: \n" + errors);
+					String.format("Logback configuration error detected: %n%s", errors));
 		}
 	}
 

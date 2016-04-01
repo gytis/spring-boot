@@ -41,7 +41,7 @@ import com.github.dockerjava.core.command.AttachContainerResultCallback;
 import com.github.dockerjava.core.command.BuildImageResultCallback;
 import com.github.dockerjava.jaxrs.AbstrSyncDockerCmdExec;
 import com.github.dockerjava.jaxrs.DockerCmdExecFactoryImpl;
-import org.hamcrest.Matcher;
+import org.assertj.core.api.Condition;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -49,8 +49,11 @@ import org.junit.runners.Parameterized.Parameters;
 
 import org.springframework.boot.ansi.AnsiColor;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assume.assumeThat;
 
 /**
  * Integration tests for Spring Boot's launch script on OSs that use SysVinit.
@@ -87,70 +90,70 @@ public class SysVinitLaunchScriptIT {
 	@Test
 	public void statusWhenStopped() throws Exception {
 		String output = doTest("status-when-stopped.sh");
-		assertThat(output, containsString("Status: 3"));
-		assertThat(output, containsColoredString(AnsiColor.RED, "Not running"));
+		assertThat(output).contains("Status: 3");
+		assertThat(output).has(coloredString(AnsiColor.RED, "Not running"));
 	}
 
 	@Test
 	public void statusWhenStarted() throws Exception {
 		String output = doTest("status-when-started.sh");
-		assertThat(output, containsString("Status: 0"));
-		assertThat(output, containsColoredString(AnsiColor.GREEN,
-				"Started [" + extractPid(output) + "]"));
+		assertThat(output).contains("Status: 0");
+		assertThat(output).has(
+				coloredString(AnsiColor.GREEN, "Started [" + extractPid(output) + "]"));
 	}
 
 	@Test
 	public void statusWhenKilled() throws Exception {
 		String output = doTest("status-when-killed.sh");
-		assertThat(output, containsString("Status: 1"));
-		assertThat(output, containsColoredString(AnsiColor.RED,
+		assertThat(output).contains("Status: 1");
+		assertThat(output).has(coloredString(AnsiColor.RED,
 				"Not running (process " + extractPid(output) + " not found)"));
 	}
 
 	@Test
 	public void stopWhenStopped() throws Exception {
 		String output = doTest("stop-when-stopped.sh");
-		assertThat(output, containsString("Status: 0"));
-		assertThat(output, containsColoredString(AnsiColor.YELLOW,
-				"Not running (pidfile not found)"));
+		assertThat(output).contains("Status: 0");
+		assertThat(output)
+				.has(coloredString(AnsiColor.YELLOW, "Not running (pidfile not found)"));
 	}
 
 	@Test
 	public void startWhenStarted() throws Exception {
 		String output = doTest("start-when-started.sh");
-		assertThat(output, containsString("Status: 0"));
-		assertThat(output, containsColoredString(AnsiColor.YELLOW,
+		assertThat(output).contains("Status: 0");
+		assertThat(output).has(coloredString(AnsiColor.YELLOW,
 				"Already running [" + extractPid(output) + "]"));
 	}
 
 	@Test
 	public void restartWhenStopped() throws Exception {
 		String output = doTest("restart-when-stopped.sh");
-		assertThat(output, containsString("Status: 0"));
-		assertThat(output, containsColoredString(AnsiColor.YELLOW,
-				"Not running (pidfile not found)"));
-		assertThat(output, containsColoredString(AnsiColor.GREEN,
-				"Started [" + extractPid(output) + "]"));
+		assertThat(output).contains("Status: 0");
+		assertThat(output)
+				.has(coloredString(AnsiColor.YELLOW, "Not running (pidfile not found)"));
+		assertThat(output).has(
+				coloredString(AnsiColor.GREEN, "Started [" + extractPid(output) + "]"));
 	}
 
 	@Test
 	public void restartWhenStarted() throws Exception {
 		String output = doTest("restart-when-started.sh");
-		assertThat(output, containsString("Status: 0"));
-		assertThat(output, containsColoredString(AnsiColor.GREEN,
+		assertThat(output).contains("Status: 0");
+		assertThat(output).has(coloredString(AnsiColor.GREEN,
 				"Started [" + extract("PID1", output) + "]"));
-		assertThat(output, containsColoredString(AnsiColor.GREEN,
+		assertThat(output).has(coloredString(AnsiColor.GREEN,
 				"Stopped [" + extract("PID1", output) + "]"));
-		assertThat(output, containsColoredString(AnsiColor.GREEN,
+		assertThat(output).has(coloredString(AnsiColor.GREEN,
 				"Started [" + extract("PID2", output) + "]"));
 	}
 
 	@Test
 	public void startWhenStopped() throws Exception {
 		String output = doTest("start-when-stopped.sh");
-		assertThat(output, containsString("Status: 0"));
-		assertThat(output, containsColoredString(AnsiColor.GREEN,
-				"Started [" + extractPid(output) + "]"));
+		assertThat(output).contains("Status: 0");
+		assertThat(output).has(
+				coloredString(AnsiColor.GREEN, "Started [" + extractPid(output) + "]"));
 	}
 
 	@Test
@@ -188,32 +191,44 @@ public class SysVinitLaunchScriptIT {
 		doLaunch("launch-with-multiple-java-opts.sh");
 	}
 
+	@Test
+	public void launchWithUseOfStartStopDaemonDisabled() throws Exception {
+		// CentOS doesn't have start-stop-daemon
+		assumeThat(this.os, is(not("CentOS")));
+		doLaunch("launch-with-use-of-start-stop-daemon-disabled.sh");
+	}
+
 	private void doLaunch(String script) throws Exception {
-		assertThat(doTest(script), containsString("Launched"));
+		assertThat(doTest(script)).contains("Launched");
 	}
 
 	private String doTest(String script) throws Exception {
 		DockerClient docker = createClient();
 		String imageId = buildImage(docker);
 		String container = createContainer(docker, imageId, script);
-		copyFilesToContainer(docker, container, script);
-		docker.startContainerCmd(container).exec();
-		StringBuilder output = new StringBuilder();
-		AttachContainerResultCallback resultCallback = docker
-				.attachContainerCmd(container).withStdOut(true).withStdErr(true)
-				.withFollowStream(true).withLogs(true)
-				.exec(new AttachContainerResultCallback() {
+		try {
+			copyFilesToContainer(docker, container, script);
+			docker.startContainerCmd(container).exec();
+			StringBuilder output = new StringBuilder();
+			AttachContainerResultCallback resultCallback = docker
+					.attachContainerCmd(container).withStdOut(true).withStdErr(true)
+					.withFollowStream(true).withLogs(true)
+					.exec(new AttachContainerResultCallback() {
 
-					@Override
-					public void onNext(Frame item) {
-						output.append(new String(item.getPayload()));
-						super.onNext(item);
-					}
+						@Override
+						public void onNext(Frame item) {
+							output.append(new String(item.getPayload()));
+							super.onNext(item);
+						}
 
-				});
-		resultCallback.awaitCompletion(60, TimeUnit.SECONDS).close();
-		docker.waitContainerCmd(container).exec();
-		return output.toString();
+					});
+			resultCallback.awaitCompletion(60, TimeUnit.SECONDS).close();
+			docker.waitContainerCmd(container).exec();
+			return output.toString();
+		}
+		finally {
+			docker.removeContainerCmd(container).exec();
+		}
 	}
 
 	private DockerClient createClient() {
@@ -228,7 +243,8 @@ public class SysVinitLaunchScriptIT {
 		BuildImageResultCallback resultCallback = new BuildImageResultCallback();
 		String dockerfile = "src/test/resources/conf/" + this.os + "/" + this.version
 				+ "/Dockerfile";
-		docker.buildImageCmd(new File(dockerfile)).exec(resultCallback);
+		String tag = "spring-boot-it/" + this.os.toLowerCase() + ":" + this.version;
+		docker.buildImageCmd(new File(dockerfile)).withTag(tag).exec(resultCallback);
 		String imageId = resultCallback.awaitImageId();
 		return imageId;
 	}
@@ -267,8 +283,16 @@ public class SysVinitLaunchScriptIT {
 				"Could not find test application in target directory. Have you built it (mvn package)?");
 	}
 
-	private Matcher<String> containsColoredString(AnsiColor color, String string) {
-		return containsString(ESC + "[0;" + color + "m" + string + ESC + "[0m");
+	private Condition<String> coloredString(AnsiColor color, String string) {
+		String colorString = ESC + "[0;" + color + "m" + string + ESC + "[0m";
+		return new Condition<String>() {
+
+			@Override
+			public boolean matches(String value) {
+				return containsString(colorString).matches(value);
+			}
+
+		};
 	}
 
 	private String extractPid(String output) {
