@@ -43,7 +43,7 @@ public class NarayanaRecoveryManagerBeanTests {
 
 	@Test
 	public void shouldCreateAndStartRecoveryManagerService() throws Exception {
-		this.recoveryManager.afterPropertiesSet();
+		this.recoveryManager.create(null);
 		verify(this.service, times(1)).create();
 		verify(this.service, times(1)).start();
 	}

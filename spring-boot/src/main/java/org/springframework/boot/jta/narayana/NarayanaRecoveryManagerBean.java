@@ -16,14 +16,13 @@
 
 package org.springframework.boot.jta.narayana;
 
-import com.arjuna.ats.arjuna.recovery.RecoveryManager;
-import com.arjuna.ats.arjuna.recovery.RecoveryModule;
 import com.arjuna.ats.internal.jta.recovery.arjunacore.XARecoveryModule;
 import com.arjuna.ats.jbossatx.jta.RecoveryManagerService;
 import com.arjuna.ats.jta.recovery.XAResourceRecoveryHelper;
 
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.util.Assert;
 
 /**
@@ -32,7 +31,7 @@ import org.springframework.util.Assert;
  * @author Gytis Trikleris
  * @since 1.4.0
  */
-public class NarayanaRecoveryManagerBean implements InitializingBean, DisposableBean {
+public class NarayanaRecoveryManagerBean implements DisposableBean {
 
 	private final RecoveryManagerService recoveryManagerService;
 
@@ -41,8 +40,8 @@ public class NarayanaRecoveryManagerBean implements InitializingBean, Disposable
 		this.recoveryManagerService = recoveryManagerService;
 	}
 
-	@Override
-	public void afterPropertiesSet() throws Exception {
+	@EventListener
+	public void create(ApplicationReadyEvent ignored) {
 		this.recoveryManagerService.create();
 		this.recoveryManagerService.start();
 	}
@@ -55,18 +54,16 @@ public class NarayanaRecoveryManagerBean implements InitializingBean, Disposable
 
 	void registerXAResourceRecoveryHelper(
 			XAResourceRecoveryHelper xaResourceRecoveryHelper) {
-		getXARecoveryModule(RecoveryManager.manager())
-				.addXAResourceRecoveryHelper(xaResourceRecoveryHelper);
+		getXARecoveryModule().addXAResourceRecoveryHelper(xaResourceRecoveryHelper);
 	}
 
-	private XARecoveryModule getXARecoveryModule(RecoveryManager recoveryManager) {
-		for (RecoveryModule recoveryModule : recoveryManager.getModules()) {
-			if (recoveryModule instanceof XARecoveryModule) {
-				return (XARecoveryModule) recoveryModule;
-			}
+	private XARecoveryModule getXARecoveryModule() {
+		XARecoveryModule xaRecoveryModule = XARecoveryModule.getRegisteredXARecoveryModule();
+		if (xaRecoveryModule == null) {
+			throw new IllegalStateException(
+					"XARecoveryModule is not registered with recovery manager");
 		}
-		throw new IllegalStateException(
-				"XARecoveryModule is not registered with recovery manager");
+		return xaRecoveryModule;
 	}
 
 }
