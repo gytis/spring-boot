@@ -19,7 +19,9 @@ package org.springframework.boot.jta.narayana;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -107,6 +109,11 @@ public class NarayanaProperties {
 	 */
 	private List<String> expiryScanners = new ArrayList<String>(Collections.singletonList(
 			"com.arjuna.ats.internal.arjuna.recovery.ExpiredTransactionStatusManagerScanner"));
+
+	/**
+	 * Pool setting.
+	 */
+	private Map<String, String> pool = new LinkedHashMap<String, String>();
 
 	public String getLogDir() {
 		return this.logDir;
@@ -212,4 +219,11 @@ public class NarayanaProperties {
 		this.recoveryJmsPass = recoveryJmsPass;
 	}
 
+	public Map<String, String> getPool() {
+		return this.pool;
+	}
+
+	public void setPool(Map<String, String> pool) {
+		this.pool = pool;
+	}
 }

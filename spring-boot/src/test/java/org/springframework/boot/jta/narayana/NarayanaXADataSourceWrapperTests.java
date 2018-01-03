@@ -18,7 +18,9 @@ package org.springframework.boot.jta.narayana;
 
 import javax.sql.DataSource;
 import javax.sql.XADataSource;
+import javax.transaction.TransactionManager;
 
+import org.apache.commons.dbcp2.managed.ManagedDataSource;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,18 +39,19 @@ public class NarayanaXADataSourceWrapperTests {
 
 	private XADataSource dataSource = mock(XADataSource.class);
 
-	private NarayanaRecoveryManagerBean recoveryManager = mock(
-			NarayanaRecoveryManagerBean.class);
+	private TransactionManager transactionManager = mock(TransactionManager.class);
+
+	private NarayanaRecoveryManagerBean recoveryManager = mock(NarayanaRecoveryManagerBean.class);
 
 	private NarayanaProperties properties = mock(NarayanaProperties.class);
 
-	private NarayanaXADataSourceWrapper wrapper = new NarayanaXADataSourceWrapper(
+	private NarayanaXADataSourceWrapper wrapper = new NarayanaXADataSourceWrapper(this.transactionManager,
 			this.recoveryManager, this.properties);
 
 	@Test
 	public void wrap() {
 		DataSource wrapped = this.wrapper.wrapDataSource(this.dataSource);
-		assertThat(wrapped).isInstanceOf(NarayanaDataSourceBean.class);
+		assertThat(wrapped).isInstanceOf(ManagedDataSource.class);
 		verify(this.recoveryManager, times(1)).registerXAResourceRecoveryHelper(
 				any(DataSourceXAResourceRecoveryHelper.class));
 		verify(this.properties, times(1)).getRecoveryDbUser();
@@ -60,7 +63,7 @@ public class NarayanaXADataSourceWrapperTests {
 		given(this.properties.getRecoveryDbUser()).willReturn("userName");
 		given(this.properties.getRecoveryDbPass()).willReturn("password");
 		DataSource wrapped = this.wrapper.wrapDataSource(this.dataSource);
-		assertThat(wrapped).isInstanceOf(NarayanaDataSourceBean.class);
+		assertThat(wrapped).isInstanceOf(ManagedDataSource.class);
 		verify(this.recoveryManager, times(1)).registerXAResourceRecoveryHelper(
 				any(DataSourceXAResourceRecoveryHelper.class));
 		verify(this.properties, times(2)).getRecoveryDbUser();
