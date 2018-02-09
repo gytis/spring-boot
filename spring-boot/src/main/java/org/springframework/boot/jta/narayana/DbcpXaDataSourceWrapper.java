@@ -26,10 +26,6 @@ import org.apache.commons.dbcp2.managed.DataSourceXAConnectionFactory;
 import org.apache.commons.dbcp2.managed.ManagedDataSource;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-
-import org.springframework.beans.MutablePropertyValues;
-import org.springframework.boot.bind.RelaxedDataBinder;
 
 /**
  * A class to wrap an {@link XADataSource} with a pooled {@link ManagedDataSource} from DBCP2.
@@ -40,11 +36,12 @@ public class DbcpXaDataSourceWrapper {
 
 	private final TransactionManager transactionManager;
 
-	private final NarayanaProperties narayanaProperties;
+	private final NarayanaProperties.PoolProperties narayanaPoolProperties;
 
-	public DbcpXaDataSourceWrapper(TransactionManager transactionManager, NarayanaProperties narayanaProperties) {
+	public DbcpXaDataSourceWrapper(TransactionManager transactionManager,
+			NarayanaProperties.PoolProperties narayanaPoolProperties) {
 		this.transactionManager = transactionManager;
-		this.narayanaProperties = narayanaProperties;
+		this.narayanaPoolProperties = narayanaPoolProperties;
 	}
 
 	public DataSource wrapDataSource(XADataSource xaDataSource) {
@@ -57,16 +54,9 @@ public class DbcpXaDataSourceWrapper {
 	private ObjectPool<PoolableConnection> createObjectPool(DataSourceXAConnectionFactory xaConnectionFactory) {
 		PoolableConnectionFactory poolableConnectionFactory = new PoolableConnectionFactory(xaConnectionFactory, null);
 		GenericObjectPool<PoolableConnection> objectPool =
-				new GenericObjectPool<PoolableConnection>(poolableConnectionFactory, getObjectPoolConfig());
+				new GenericObjectPool<PoolableConnection>(poolableConnectionFactory, this.narayanaPoolProperties);
 		poolableConnectionFactory.setPool(objectPool);
 		return objectPool;
-	}
-
-	private GenericObjectPoolConfig getObjectPoolConfig() {
-		GenericObjectPoolConfig objectPoolConfig = new GenericObjectPoolConfig();
-		MutablePropertyValues properties = new MutablePropertyValues(this.narayanaProperties.getPool());
-		new RelaxedDataBinder(objectPoolConfig).bind(properties);
-		return objectPoolConfig;
 	}
 
 }

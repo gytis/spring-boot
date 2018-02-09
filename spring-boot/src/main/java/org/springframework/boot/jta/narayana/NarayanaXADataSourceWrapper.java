@@ -18,7 +18,6 @@ package org.springframework.boot.jta.narayana;
 
 import javax.sql.DataSource;
 import javax.sql.XADataSource;
-import javax.transaction.TransactionManager;
 
 import com.arjuna.ats.jta.recovery.XAResourceRecoveryHelper;
 import org.apache.commons.dbcp2.managed.ManagedDataSource;
@@ -35,7 +34,7 @@ import org.springframework.util.Assert;
  */
 public class NarayanaXADataSourceWrapper implements XADataSourceWrapper {
 
-	private final TransactionManager transactionManager;
+	private final DbcpXaDataSourceWrapper delegateWrapper;
 
 	private final NarayanaRecoveryManagerBean recoveryManager;
 
@@ -44,16 +43,16 @@ public class NarayanaXADataSourceWrapper implements XADataSourceWrapper {
 	/**
 	 * Create a new {@link NarayanaXADataSourceWrapper} instance.
 	 *
-	 * @param transactionManager the transaction manager
-	 * @param recoveryManager    the underlying recovery manager
-	 * @param properties         the Narayana properties
+	 * @param delegateWrapper the DBCP wrapper
+	 * @param recoveryManager the underlying recovery manager
+	 * @param properties      the Narayana properties
 	 */
-	public NarayanaXADataSourceWrapper(TransactionManager transactionManager,
+	public NarayanaXADataSourceWrapper(DbcpXaDataSourceWrapper delegateWrapper,
 			NarayanaRecoveryManagerBean recoveryManager, NarayanaProperties properties) {
-		Assert.notNull(transactionManager, "TransactionManager must not be null");
+		Assert.notNull(delegateWrapper, "DBCP wrapper must not be null");
 		Assert.notNull(recoveryManager, "RecoveryManager must not be null");
 		Assert.notNull(properties, "Properties must not be null");
-		this.transactionManager = transactionManager;
+		this.delegateWrapper = delegateWrapper;
 		this.recoveryManager = recoveryManager;
 		this.properties = properties;
 	}
@@ -62,9 +61,7 @@ public class NarayanaXADataSourceWrapper implements XADataSourceWrapper {
 	public DataSource wrapDataSource(XADataSource dataSource) {
 		XAResourceRecoveryHelper recoveryHelper = getRecoveryHelper(dataSource);
 		this.recoveryManager.registerXAResourceRecoveryHelper(recoveryHelper);
-
-		DbcpXaDataSourceWrapper delegateWrapper = new DbcpXaDataSourceWrapper(this.transactionManager, this.properties);
-		return delegateWrapper.wrapDataSource(dataSource);
+		return this.delegateWrapper.wrapDataSource(dataSource);
 	}
 
 	private XAResourceRecoveryHelper getRecoveryHelper(XADataSource dataSource) {

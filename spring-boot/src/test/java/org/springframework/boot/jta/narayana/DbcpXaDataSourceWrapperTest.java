@@ -46,7 +46,7 @@ public class DbcpXaDataSourceWrapperTest {
 	private TransactionManager mockTransactionManager;
 
 	@Mock
-	private NarayanaProperties mockNarayanaProperties;
+	private NarayanaProperties.PoolProperties mockNarayanaPoolProperties;
 
 	@Mock
 	private XADataSource mockXaDataSource;
@@ -67,7 +67,7 @@ public class DbcpXaDataSourceWrapperTest {
 		when(this.mockXaDataSource.getXAConnection()).thenReturn(this.mockXaConnection);
 		when(this.mockXaConnection.getConnection()).thenReturn(this.mockConnection);
 		when(this.mockXaConnection.getXAResource()).thenReturn(this.mockXaResource);
-		this.wrapper = new DbcpXaDataSourceWrapper(this.mockTransactionManager, this.mockNarayanaProperties);
+		this.wrapper = new DbcpXaDataSourceWrapper(this.mockTransactionManager, this.mockNarayanaPoolProperties);
 	}
 
 	@Test
